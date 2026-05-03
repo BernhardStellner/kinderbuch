@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📚 KinderBuch-Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rose:#FF6B9D;--lav:#C77DFF;--sky:#6BCFF6;--sun:#FFD93D;
+  --grass:#6BCB77;--mint:#4ECDC4;--peach:#FF9A5C;
+  --cream:#FFFBF0;--ink:#2D2D2D;--r:20px;--sh:0 6px 24px rgba(0,0,0,.09);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#FFF5E6,#E8F8FF 50%,#F0FFF4);min-height:100vh;color:var(--ink)}
+header{text-align:center;padding:28px 16px 14px}
+header h1{font-family:'Fredoka One',cursive;font-size:clamp(1.8rem,6vw,2.8rem);background:linear-gradient(135deg,var(--rose),var(--lav),var(--sky));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+header p{color:#999;font-size:.9rem;margin-top:4px}
+.wrap{max-width:680px;margin:0 auto;padding:0 14px 60px}
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:20px 18px;margin-bottom:14px}
+.ct{font-family:'Fredoka One',cursive;font-size:1.05rem;color:var(--rose);margin-bottom:12px}
+label{font-weight:700;font-size:.82rem;color:#555;display:block;margin-bottom:3px}
+input,select{width:100%;border:2px solid #E8E8E8;border-radius:11px;padding:9px 13px;font-family:'Nunito',sans-serif;font-size:.93rem;outline:none;background:var(--cream);transition:border-color .2s}
+input:focus,select:focus{border-color:var(--lav)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+@media(max-width:480px){.g2{grid-template-columns:1fr}}
+.ntags{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.ntag{background:linear-gradient(135deg,var(--sun),var(--peach));color:#fff;font-weight:800;padding:3px 11px;border-radius:20px;font-size:.82rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.btn{border:none;border-radius:13px;padding:11px 22px;font-family:'Nunito',sans-serif;font-weight:800;font-size:.93rem;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(0,0,0,.13)}
+.btn:active{transform:none}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+.bp{background:linear-gradient(135deg,var(--rose),var(--lav));color:#fff;font-size:1rem;padding:13px 30px}
+.bs{background:linear-gradient(135deg,var(--sky),var(--mint));color:#fff}
+.bg{background:linear-gradient(135deg,var(--grass),var(--mint));color:#fff}
+.bsm{background:var(--cream);border:2px solid #ddd;color:#555;padding:7px 14px;font-size:.8rem}
+
+/* PROXY CARD */
+.proxycard{background:linear-gradient(135deg,#F0F8FF,#F8F0FF);border:2px solid #C8E4FF}
+.prow{display:flex;gap:9px;align-items:flex-end}
+.prow input{flex:1;font-family:monospace;font-size:.85rem}
+.pstat{font-size:.8rem;font-weight:700;margin-top:5px}
+
+/* PROGRESS */
+#prog{display:none}
+.pbw{background:#F0F0F0;border-radius:20px;overflow:hidden;height:13px;margin-top:9px}
+.pb{height:100%;background:linear-gradient(90deg,var(--rose),var(--lav),var(--sky));background-size:200%;animation:gs 1.5s linear infinite;border-radius:20px;transition:width .4s;width:0}
+@keyframes gs{0%{background-position:0%}100%{background-position:200%}}
+.plbl{font-weight:700;color:#888;font-size:.82rem;margin-top:6px}
+
+/* OUTPUT */
+#out{display:none}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px;position:sticky;top:8px;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);padding:9px 12px;border-radius:15px;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+
+/* BOOK */
+.cover{border-radius:var(--r);padding:34px 22px;text-align:center;margin-bottom:16px;background:linear-gradient(135deg,#FFE8F5,#E8F4FF,#E8FFF0);box-shadow:var(--sh)}
+.cover h2{font-family:'Fredoka One',cursive;font-size:clamp(1.4rem,4vw,2.1rem);color:var(--rose)}
+.pblock{background:#fff;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:18px;overflow:hidden;page-break-inside:avoid;break-inside:avoid}
+.phead{background:linear-gradient(90deg,var(--lav),var(--sky));color:#fff;font-family:'Fredoka One',cursive;font-size:.88rem;padding:7px 15px;display:flex;justify-content:space-between}
+.pcont{display:grid;grid-template-columns:1fr 1fr}
+@media(max-width:480px){.pcont{grid-template-columns:1fr}}
+.pill{background:linear-gradient(135deg,#FFF5F9,#F0F8FF);min-height:190px;display:flex;align-items:center;justify-content:center;padding:12px;position:relative}
+.pill img{width:100%;max-height:240px;object-fit:contain;border-radius:10px}
+.spinner{width:28px;height:28px;border:3px solid #E8E8E8;border-top-color:var(--lav);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ptxt{padding:16px 18px 13px;display:flex;flex-direction:column;justify-content:center;gap:8px}
+.ptxt p{font-size:.93rem;line-height:1.75;color:#333}
+.pnum{font-family:'Fredoka One',cursive;color:var(--lav);font-size:.78rem}
+.lesson{background:linear-gradient(135deg,#FFF9E6,#FFFBEF);border:2px solid var(--sun);border-radius:15px;padding:15px 18px;margin:18px 0}
+.lesson h3{font-family:'Fredoka One',cursive;color:#E8A000;margin-bottom:6px;font-size:1rem}
+.err{background:#FFF0F0;border:2px solid #FFB3B3;border-radius:11px;padding:9px 13px;color:#C00;font-weight:700;font-size:.85rem;margin-top:9px;display:none}
+
+/* MODAL */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center}
+.mo.open{display:flex}
+.md{background:#fff;border-radius:20px;padding:26px;max-width:400px;width:92%;box-shadow:0 20px 50px rgba(0,0,0,.2);text-align:center}
+.md h3{font-family:'Fredoka One',cursive;font-size:1.25rem;color:var(--rose);margin-bottom:8px}
+.ps{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0}
+.psb{border:2px solid #E0E0E0;border-radius:12px;padding:12px 8px;cursor:pointer;background:var(--cream);transition:all .2s;text-align:center;font-family:'Nunito',sans-serif}
+.psb:hover{border-color:var(--lav);background:#F8F0FF;transform:translateY(-2px)}
+.psb .ic{font-size:1.5rem;display:block;margin-bottom:3px}
+.psb strong{font-size:.85rem;display:block}
+.psb small{color:#999;font-size:.72rem}
+
+@media print{
+  body{background:#fff}
+  header,#form-sec,.toolbar,#prog,.proxycard{display:none!important}
+  #out{display:block!important}
+  .pblock{box-shadow:none;page-break-after:always;break-after:page}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="font-size:2.1rem;margin-bottom:5px">📚✨</div>
+  <h1>KinderBuch-Generator</h1>
+  <p>GPT-4o schreibt · DALL·E 3 illustriert · World4You Proxy</p>
+</header>
+
+<div class="wrap">
+
+  <!-- PROXY URL -->
+  <div class="card proxycard">
+    <div class="ct">⚙️ Proxy-URL (einmalig eintragen)</div>
+    <div class="prow">
+      <div style="flex:1">
+        <label>URL deiner kinderbuch-proxy.php</label>
+        <input type="url" id="proxyurl" placeholder="https://deinedomain.at/kinderbuch-proxy.php" oninput="saveProxy()"/>
+      </div>
+      <button class="btn bs" style="padding:9px 14px;font-size:.82rem" onclick="testProxy()">Testen</button>
+    </div>
+    <div class="pstat" id="pstat"></div>
+    <div style="font-size:.74rem;color:#BBB;margin-top:5px">
+      🔒 API-Key steht nur in der PHP-Datei auf deinem Server – nie im Browser sichtbar
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div id="form-sec">
+
+    <div class="card">
+      <div class="ct">👶 Hauptfiguren</div>
+      <label>Namen eingeben → Enter drücken</label>
+      <input type="text" id="ni" placeholder="z.B. Emma, Lukas, Sophie …"/>
+      <div class="ntags" id="nt"></div>
+    </div>
+
+    <div class="card">
+      <div class="ct">📖 Bucheinstellungen</div>
+      <div class="g2">
+        <div style="grid-column:1/-1">
+          <label>Buchtitel (optional)</label>
+          <input type="text" id="bt" placeholder="Das Abenteuer von …"/>
+        </div>
+        <div>
+          <label>Alter</label>
+          <select id="age">
+            <option value="3-5">3–5 Jahre</option>
+            <option value="5-8" selected>5–8 Jahre</option>
+            <option value="8-12">8–12 Jahre</option>
+          </select>
+        </div>
+        <div>
+          <label>Seiten</label>
+          <select id="np">
+            <option value="4">4 Seiten</option>
+            <option value="6" selected>6 Seiten</option>
+            <option value="8">8 Seiten</option>
+            <option value="10">10 Seiten</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1">
+          <label>🌍 Schauplatz</label>
+          <input type="text" id="set" placeholder="z.B. Zauberwald, Weltall, Strand …"/>
+        </div>
+        <div>
+          <label>🎨 Illustrationsstil</label>
+          <select id="art">
+            <option value="watercolor children's book, soft pastel colors">Aquarell</option>
+            <option value="flat vector illustration, bright bold colors, cute cartoon" selected>Cartoon</option>
+            <option value="pencil sketch, hand-drawn, cozy children's book">Bleistift</option>
+            <option value="colorful oil painting, rich textures, children's book">Ölgemälde</option>
+            <option value="cute kawaii illustration, pastel anime style">Kawaii</option>
+          </select>
+        </div>
+        <div>
+          <label>🌈 Farbstimmung</label>
+          <select id="mood">
+            <option value="warm sunny golden colors">☀️ Warm & sonnig</option>
+            <option value="cool magical purple blue starry" selected>🌙 Kühl & magisch</option>
+            <option value="earthy natural green brown">🌿 Erdig & natürlich</option>
+            <option value="vibrant energetic rainbow">🎨 Lebendig</option>
+          </select>
+        </div>
+        <div>
+          <label>🖼️ DALL·E Version</label>
+          <select id="dallemodel">
+            <option value="dall-e-3" selected>DALL·E 3 (beste Qualität)</option>
+            <option value="dall-e-2">DALL·E 2 (schneller/günstiger)</option>
+          </select>
+        </div>
+        <div>
+          <label>GPT-Modell</label>
+          <select id="gm">
+            <option value="gpt-4o" selected>GPT-4o (empfohlen)</option>
+            <option value="gpt-4o-mini">GPT-4o-mini (günstiger)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ct">💡 Lektion für die Kinder</div>
+      <div class="g2">
+        <div>
+          <label>Vorlage</label>
+          <select id="lp" onchange="applyL()">
+            <option value="">– Eigene –</option>
+            <option value="Teilen macht Freude und stärkt Freundschaften.">🤝 Teilen & Freundschaft</option>
+            <option value="Mut bedeutet, es trotz Angst zu versuchen.">🦁 Mut & Tapferkeit</option>
+            <option value="Jeder ist besonders – unsere Unterschiede machen uns stark.">🌟 Einzigartigkeit</option>
+            <option value="Wenn wir uns anstrengen, können wir alles erreichen.">💪 Fleiß & Ausdauer</option>
+            <option value="Die Natur braucht unsere Fürsorge und Liebe.">🌿 Naturschutz</option>
+            <option value="Ehrlichkeit ist das Fundament echter Freundschaft.">✨ Ehrlichkeit</option>
+            <option value="Fehler sind Lernchancen – niemand ist perfekt.">🔄 Fehler sind OK</option>
+          </select>
+        </div>
+        <div>
+          <label>Eigene Lektion</label>
+          <input type="text" id="lc" placeholder="z.B. Gemeinsam sind wir stärker …"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kosten-Info -->
+    <div class="card" style="background:linear-gradient(135deg,#F0FFF4,#FFFBF0);border:2px solid #C8ECD0">
+      <div style="font-size:.82rem;color:#555;line-height:1.7">
+        💰 <strong>Geschätzte Kosten pro Buch (OpenAI):</strong><br>
+        GPT-4o-mini + DALL·E 2 (6 Seiten) ≈ <strong>~0,15 €</strong><br>
+        GPT-4o + DALL·E 3 (6 Seiten) ≈ <strong>~0,80–1,20 €</strong>
+      </div>
+    </div>
+
+    <div class="card" style="background:linear-gradient(135deg,#FFF0F8,#F0F4FF);text-align:center">
+      <div style="color:#999;font-size:.85rem;margin-bottom:11px">GPT schreibt Text · DALL·E 3 generiert echte Illustrationen</div>
+      <button class="btn bp" onclick="gen()">✨ Buch generieren</button>
+      <div class="err" id="errmsg"></div>
+    </div>
+
+  </div><!-- /form-sec -->
+
+  <!-- PROGRESS -->
+  <div id="prog" class="card">
+    <div class="ct">⏳ Buch wird erstellt …</div>
+    <div class="pbw"><div class="pb" id="pb"></div></div>
+    <div class="plbl" id="plbl">Starte …</div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div id="out">
+    <div class="toolbar">
+      <button class="btn bs" style="font-size:.82rem;padding:8px 14px" onclick="showForm()">✏️ Neu</button>
+      <button class="btn bg" style="font-size:.82rem;padding:8px 14px" onclick="window.print()">🖨️ PDF</button>
+      <button class="btn bp" style="font-size:.82rem;padding:8px 14px" onclick="document.getElementById('pmo').classList.add('open')">📦 Druckerei</button>
+    </div>
+    <div id="pages"></div>
+  </div>
+
+</div>
+
+<!-- PRINT MODAL -->
+<div class="mo" id="pmo">
+  <div class="md">
+    <div style="font-size:1.8rem;margin-bottom:5px">📦</div>
+    <h3>Druckerei bestellen</h3>
+    <p style="color:#666;font-size:.85rem;margin-bottom:4px">1. PDF exportieren &nbsp;→&nbsp; 2. Bei Druckerei hochladen:</p>
+    <div class="ps">
+      <div class="psb" onclick="goS('https://www.lulu.com')"><span class="ic">📗</span><strong>Lulu.com</strong><small>Hardcover, weltweit</small></div>
+      <div class="psb" onclick="goS('https://www.epubli.de')"><span class="ic">📘</span><strong>epubli.de</strong><small>Deutsche Druckerei</small></div>
+      <div class="psb" onclick="goS('https://www.printful.com')"><span class="ic">📙</span><strong>Printful</strong><small>Print-on-Demand</small></div>
+      <div class="psb" onclick="goS('https://www.cewe.at/fotobuch.html')"><span class="ic">📕</span><strong>CEWE AT</strong><small>Fotobuch-Qualität</small></div>
+    </div>
+    <button class="btn bg" style="font-size:.85rem" onclick="document.getElementById('pmo').classList.remove('open');window.print()">🖨️ Jetzt PDF exportieren</button>
+    &nbsp;
+    <button class="btn bsm" onclick="document.getElementById('pmo').classList.remove('open')">Schließen</button>
+  </div>
+</div>
+
+<script>
+// ─── PROXY URL ───
+const PLS = 'kb_proxy_url';
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem(PLS);
+  if (saved) { document.getElementById('proxyurl').value = saved; setStat('✅ URL geladen', '#2E7D32'); }
+});
+function saveProxy() {
+  const v = document.getElementById('proxyurl').value.trim();
+  if (v) localStorage.setItem(PLS, v);
+  setStat('', '');
+}
+function setStat(msg, color) {
+  const el = document.getElementById('pstat');
+  el.textContent = msg; el.style.color = color;
+}
+function getProxy() { return document.getElementById('proxyurl').value.trim(); }
+
+async function testProxy() {
+  const url = getProxy();
+  if (!url) { setStat('❌ Bitte URL eingeben', '#C00'); return; }
+  setStat('⏳ Teste …', '#888');
+  try {
+    const r = await fetch(url + '?endpoint=chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 5, messages: [{ role: 'user', content: 'Hi' }] })
+    });
+    const d = await r.json();
+    if (d.choices || d.error?.message) {
+      setStat('✅ Proxy erreichbar!', '#2E7D32');
+    } else {
+      setStat('⚠️ Unerwartete Antwort', '#E8A000');
+    }
+  } catch (e) { setStat('❌ Proxy nicht erreichbar: ' + e.message, '#C00'); }
+}
+
+// ─── NAMES ───
+let names = [];
+document.getElementById('ni').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    const v = this.value.trim();
+    if (v && !names.includes(v)) { names.push(v); renderN(); }
+    this.value = '';
+  }
+});
+function renderN() {
+  document.getElementById('nt').innerHTML = names.map((n, i) =>
+    `<span class="ntag" onclick="names.splice(${i},1);renderN()">${n} <span>×</span></span>`).join('');
+}
+function applyL() {
+  const v = document.getElementById('lp').value;
+  if (v) document.getElementById('lc').value = v;
+}
+
+// ─── PROGRESS ───
+function sp(pct, lbl) {
+  document.getElementById('pb').style.width = pct + '%';
+  document.getElementById('plbl').textContent = lbl;
+}
+
+// ─── API via Proxy ───
+async function callProxy(endpoint, body) {
+  const proxy = getProxy();
+  if (!proxy) throw new Error('Bitte Proxy-URL eintragen!');
+  const r = await fetch(proxy + '?endpoint=' + endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const data = await r.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data;
+}
+
+// ─── GENERATE ───
+async function gen() {
+  if (!getProxy()) { showErr('❌ Bitte zuerst Proxy-URL eintragen!'); return; }
+
+  const fnames  = names.length ? names : ['Mia', 'Leon'];
+  const title   = document.getElementById('bt').value.trim() || `Das Abenteuer von ${fnames.join(' und ')}`;
+  const age     = document.getElementById('age').value;
+  const set     = document.getElementById('set').value.trim() || 'Zauberwald';
+  const np      = parseInt(document.getElementById('np').value);
+  const art     = document.getElementById('art').value;
+  const mood    = document.getElementById('mood').value;
+  const dalle   = document.getElementById('dallemodel').value;
+  const gm      = document.getElementById('gm').value;
+  const lesson  = document.getElementById('lc').value.trim() || document.getElementById('lp').value || 'Gemeinsam können wir alles schaffen.';
+
+  document.getElementById('form-sec').style.display = 'none';
+  document.getElementById('prog').style.display = 'block';
+  document.getElementById('out').style.display = 'none';
+  document.getElementById('errmsg').style.display = 'none';
+  sp(5, 'Verbinde …');
+
+  try {
+    // STEP 1 — Geschichte schreiben
+    sp(10, 'Geschichte wird geschrieben …');
+    const storyData = await callProxy('chat', {
+      model: gm,
+      max_tokens: 3500,
+      response_format: { type: 'json_object' },
+      messages: [{ role: 'user', content:
+`Du bist ein Kinderbuch-Autor. Schreibe ein vollständiges Kinderbuch auf Deutsch für ${age} Jahre.
+Titel: "${title}" | Figuren: ${fnames.join(', ')} | Schauplatz: ${set} | Lektion: "${lesson}" | Seiten: ${np}
+
+Antworte NUR mit JSON (kein Markdown):
+{
+  "title":"...",
+  "subtitle":"Eine Geschichte über ...",
+  "cover_emoji":"🌟",
+  "lesson_summary":"1-2 Sätze",
+  "pages":[{
+    "page_num":1,
+    "text":"2-4 Sätze Deutsch, altersgerecht",
+    "illustration_prompt":"Detailed English DALL-E 3 prompt. Describe exactly what to draw: characters appearance, action, setting, lighting, mood. Style: ${art}. Colors: ${mood}. Children's book illustration. No text in image. Safe for children."
+  }]
+}
+Genau ${np} Seiten. Namen einbauen. Lektion organisch. NUR JSON.`
+      }]
+    });
+    const book = JSON.parse(storyData.choices[0].message.content);
+    sp(30, 'Geschichte fertig! DALL·E generiert Illustrationen …');
+
+    // STEP 2 — DALL·E Illustrationen
+    const pages = book.pages || [];
+    for (let i = 0; i < pages.length; i++) {
+      const pct = 30 + Math.round((i / pages.length) * 62);
+      sp(pct, `Illustration ${i + 1} von ${pages.length} (DALL·E ${dalle === 'dall-e-3' ? '3' : '2'}) …`);
+      try {
+        const imgData = await callProxy('images', {
+          model: dalle,
+          prompt: pages[i].illustration_prompt + `, ${art}, ${mood}, children's book illustration, colorful, friendly, no text, no letters, safe for children`,
+          n: 1,
+          size: dalle === 'dall-e-3' ? '1024x1024' : '512x512',
+          response_format: 'url'
+        });
+        pages[i].image_url = imgData.data?.[0]?.url || null;
+      } catch (ie) {
+        console.warn('Illustration Fehler Seite', i + 1, ie.message);
+        pages[i].image_url = null;
+        pages[i].image_error = ie.message;
+      }
+      await new Promise(r => setTimeout(r, 300));
+    }
+
+    sp(100, 'Fertig! 🎉');
+    renderBook(book, title);
+    setTimeout(() => {
+      document.getElementById('prog').style.display = 'none';
+      document.getElementById('out').style.display = 'block';
+      document.getElementById('out').scrollIntoView({ behavior: 'smooth' });
+    }, 600);
+
+  } catch (err) {
+    document.getElementById('prog').style.display = 'none';
+    document.getElementById('form-sec').style.display = 'block';
+    showErr('❌ ' + err.message);
+  }
+}
+
+// ─── RENDER ───
+function renderBook(book, fallbackTitle) {
+  const c = document.getElementById('pages');
+  const t = book.title || fallbackTitle;
+  c.innerHTML = `
+    <div class="cover">
+      <div style="font-size:3.2rem;margin-bottom:8px">${x(book.cover_emoji || '📚')}</div>
+      <h2>${x(t)}</h2>
+      <div style="color:#AAA;font-size:.88rem;margin-top:5px">${x(book.subtitle || '')}</div>
+    </div>`;
+
+  (book.pages || []).forEach((p, i) => {
+    const ill = p.image_url
+      ? `<img src="${p.image_url}" alt="Illustration Seite ${i+1}" style="width:100%;max-height:240px;object-fit:contain;border-radius:10px">`
+      : `<div style="text-align:center;color:#CCC;padding:20px">
+           <div style="font-size:2rem">🎨</div>
+           <div style="font-size:11px;margin-top:4px">${p.image_error ? 'Fehler: ' + x(p.image_error) : 'Kein Bild'}</div>
+         </div>`;
+    c.innerHTML += `
+      <div class="pblock">
+        <div class="phead">
+          <span>Seite ${p.page_num || i+1}</span>
+          <span style="opacity:.7;font-size:.78rem">${x(t)}</span>
+        </div>
+        <div class="pcont">
+          <div class="pill">${ill}</div>
+          <div class="ptxt">
+            <p>${x(p.text)}</p>
+            <div class="pnum">Seite ${p.page_num || i+1}</div>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  c.innerHTML += `
+    <div class="lesson">
+      <h3>💡 Was wir heute gelernt haben</h3>
+      <p style="font-size:.9rem;line-height:1.7;color:#555">${x(book.lesson_summary || '')}</p>
+    </div>
+    <div class="cover" style="background:linear-gradient(135deg,#E8FFF0,#FFF0F8)">
+      <div style="font-size:2.8rem">⭐</div>
+      <h2 style="font-size:1.2rem;margin-top:8px">${x(t)}</h2>
+      <div style="color:#CCC;font-size:.75rem;margin-top:14px">Erstellt mit KinderBuch-Generator ✨</div>
+    </div>`;
+}
+
+function x(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showErr(m) { const el=document.getElementById('errmsg'); el.textContent=m; el.style.display='block'; }
+function showForm() { document.getElementById('form-sec').style.display='block'; document.getElementById('out').style.display='none'; window.scrollTo({top:0,behavior:'smooth'}); }
+function goS(url) { document.getElementById('pmo').classList.remove('open'); window.print(); setTimeout(()=>window.open(url,'_blank'),800); }
+</script>
+</body>
+</html>
